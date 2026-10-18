@@ -4,7 +4,9 @@
  * localmente con YIN y la máquina de eventos de nota.
  */
 
+import { isTonePlaying } from './audio'
 import { nearestNoteFromFrequency } from './notes'
+import { createPitchStabilizer } from './pitchStabilizer'
 import {
   createNoteEventTracker,
   type NoteEvent,
@@ -29,6 +31,8 @@ export interface DetectedFrame {
   confidence: number | null
   /** Volumen RMS del fotograma. */
   rms: number
+  /** Fragmentos consecutivos con la misma nota (racha del estabilizador). */
+  consecutiveFragments: number
 }
 
 export interface MicrophoneCallbacks {
@@ -52,7 +56,8 @@ export class MicrophoneStartError extends Error {
   }
 }
 
-const ANALYSIS_INTERVAL_MS = 80
+/** Intervalo entre análisis de audio (cada ventana de 4096 muestras). */
+export const ANALYSIS_INTERVAL_MS = 80
 
 export async function startMicrophone(
   callbacks: MicrophoneCallbacks,
@@ -96,6 +101,7 @@ export async function startMicrophone(
 
   const timeData = new Float32Array(analyser.fftSize)
   const tracker = createNoteEventTracker()
+  const stabilizer = createPitchStabilizer()
   let rafId = 0
   let lastAnalysis = 0
   let stopped = false
@@ -106,6 +112,10 @@ export async function startMicrophone(
     analyser.getFloatTimeDomainData(timeData)
     if (now - lastAnalysis < ANALYSIS_INTERVAL_MS) return
     lastAnalysis = now
+
+    // Mientras suena un tono generado (referencia o instrucción) se pausa
+    // el análisis: el altavoz no debe interpretarse como nota del usuario.
+    if (isTonePlaying()) return
 
     let sum = 0
     for (let i = 0; i < timeData.length; i++) {
@@ -126,8 +136,23 @@ export async function startMicrophone(
       cents = nearest.cents
     }
 
-    callbacks.onFrame({ frequency, midi, cents, confidence, rms })
-    for (const event of tracker.process({ rms, frequency, confidence })) {
+    // La lección solo ve la frecuencia estabilizada (confirmada tras varios
+    // fragmentos seguidos); el fotograma expone la estimación cruda para
+    // el modo diagnóstico.
+    const stabilized = stabilizer.process({ rms, frequency, confidence })
+    callbacks.onFrame({
+      frequency,
+      midi,
+      cents,
+      confidence,
+      rms,
+      consecutiveFragments: stabilized.consecutiveFragments,
+    })
+    for (const event of tracker.process({
+      rms,
+      frequency: stabilized.stableFrequency,
+      confidence: stabilized.stableFrequency !== null ? confidence : null,
+    })) {
       callbacks.onEvent(event)
     }
   }

@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import type { DetectedFrame, MicError, MicrophoneHandle } from '../lib/microphone'
+import {
+  ANALYSIS_INTERVAL_MS,
+  type DetectedFrame,
+  type MicError,
+  type MicrophoneHandle,
+} from '../lib/microphone'
 import { MicrophoneStartError, startMicrophone } from '../lib/microphone'
 import { isWithinTolerance, noteFromMidi } from '../lib/notes'
 import type { NoteEvent } from '../lib/pitchEvents'
+import { DEFAULT_STABILIZER_OPTIONS } from '../lib/pitchStabilizer'
 
 /**
  * Panel de micrófono: botón de activar/desactivar con permiso explícito,
@@ -24,6 +30,9 @@ const ERROR_MESSAGES: Record<MicError, string> = {
 
 type MicState = 'off' | 'starting' | 'on' | 'error'
 
+const REQUIRED_FRAGMENTS = DEFAULT_STABILIZER_OPTIONS.requiredFragments
+const CONFIRMATION_MS = REQUIRED_FRAGMENTS * ANALYSIS_INTERVAL_MS
+
 interface MicrophonePanelProps {
   /** Eventos de nota detectados (solo cuando el micrófono está activo). */
   onNoteEvent: (event: NoteEvent) => void
@@ -33,6 +42,7 @@ export function MicrophonePanel({ onNoteEvent }: MicrophonePanelProps) {
   const [state, setState] = useState<MicState>('off')
   const [error, setError] = useState<MicError | null>(null)
   const [frame, setFrame] = useState<DetectedFrame | null>(null)
+  const [diagnostic, setDiagnostic] = useState(false)
   const handleRef = useRef<MicrophoneHandle | null>(null)
   // Ref con el callback actual para que el bucle de audio no quede con
   // un closure antiguo (sin reiniciar el micrófono en cada render).
@@ -125,6 +135,14 @@ export function MicrophonePanel({ onNoteEvent }: MicrophonePanelProps) {
         >
           {buttonLabel}
         </button>
+        <button
+          type="button"
+          className={`btn btn-secondary${diagnostic ? ' mic-diagnostic-toggle-on' : ''}`}
+          onClick={() => setDiagnostic((value) => !value)}
+          aria-pressed={diagnostic}
+        >
+          Modo diagnóstico
+        </button>
         <p className="mic-note">
           El audio se analiza en este dispositivo; no se graba ni se envía a
           ningún servidor.
@@ -174,6 +192,42 @@ export function MicrophonePanel({ onNoteEvent }: MicrophonePanelProps) {
           {frame.cents !== null && noteInfo !== null && !inTune && (
             <p className="mic-tuning-warning">
               Afinación fuera de tolerancia (±30 cents): ajusta la nota.
+            </p>
+          )}
+        </div>
+      )}
+
+      {diagnostic && (
+        <div className="mic-diagnostic">
+          {state === 'on' && frame !== null ? (
+            <>
+              <p className="mic-diagnostic-hint">
+                Lecturas crudas del análisis. La lección solo acepta la nota
+                cuando coinciden {REQUIRED_FRAGMENTS} fragmentos seguidos
+                (unos {CONFIRMATION_MS} ms); la estimación cruda de abajo puede
+                variar antes de confirmarse.
+              </p>
+              <div className="mic-diagnostic-grid">
+                <div className="mic-reading">
+                  <span className="mic-reading-label">RMS</span>
+                  <span className="mic-reading-value">
+                    {frame.rms.toFixed(4)}
+                  </span>
+                </div>
+                <div className="mic-reading">
+                  <span className="mic-reading-label">Fragmentos seguidos</span>
+                  <span className="mic-reading-value">
+                    {Math.min(frame.consecutiveFragments, REQUIRED_FRAGMENTS)}{' '}
+                    / {REQUIRED_FRAGMENTS}
+                  </span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p className="mic-diagnostic-hint">
+              Activa el micrófono para ver en tiempo real el RMS, la frecuencia
+              estimada, la confianza, la nota estimada y los fragmentos
+              consecutivos que coinciden.
             </p>
           )}
         </div>

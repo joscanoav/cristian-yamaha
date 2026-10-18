@@ -453,6 +453,36 @@ body {
   color: var(--color-warning);
 }
 
+.mic-diagnostic-toggle-on {
+  background: var(--color-info-bg);
+  color: #1864ab;
+  border-color: #1864ab;
+}
+
+.mic-diagnostic {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f1f3f5;
+  border: 1px dashed var(--color-border);
+  border-radius: 10px;
+}
+
+.mic-diagnostic-hint {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.mic-diagnostic-hint:last-child {
+  margin-bottom: 0;
+}
+
+.mic-diagnostic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
 /* Modo demostración */
 .demo-card {
   border: 2px dashed var(--color-warning);

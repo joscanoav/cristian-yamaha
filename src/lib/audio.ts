@@ -9,6 +9,16 @@ import { frequencyFromMidi } from './notes'
 type AudioContextCtor = typeof AudioContext
 
 let audioContext: AudioContext | null = null
+let playingTones = 0
+
+/**
+ * Indica si suena ahora mismo un tono generado por la aplicación.
+ * El micrófono usa esta señal para pausar el análisis y no interpretar
+ * el propio altavoz como una nota del usuario.
+ */
+export function isTonePlaying(): boolean {
+  return playingTones > 0
+}
 
 function getAudioContext(): AudioContext {
   if (audioContext === null) {
@@ -41,6 +51,17 @@ export function playNote(midi: number, durationSeconds = 1.4): void {
   master.gain.exponentialRampToValueAtTime(0.5, now + 0.012)
   master.gain.exponentialRampToValueAtTime(0.0001, now + durationSeconds)
   master.connect(ctx.destination)
+
+  playingTones++
+  // El tono audible termina alrededor de durationSeconds; el margen extra
+  // asegura que la ventana del analizador (unos 85 ms) quede limpia de
+  // cola antes de reanudar el análisis del micrófono.
+  window.setTimeout(
+    () => {
+      playingTones = Math.max(0, playingTones - 1)
+    },
+    (durationSeconds + 0.2) * 1000,
+  )
 
   const partials = [
     { ratio: 1, gain: 0.55 },
