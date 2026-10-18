@@ -1,4 +1,4 @@
-/* PianoLab — estilos globales. Diseño responsive móvil primero. */
+/* Cristian Yamaha — estilos globales. Diseño responsive móvil primero. */
 
 :root {
   --color-bg: #f4f5fa;
@@ -312,6 +312,145 @@ body {
 .btn-warning {
   background: var(--color-warning);
   color: #fff;
+}
+
+.btn-danger {
+  background: var(--color-error);
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #a61e1e;
+}
+
+/* Selector de lecciones */
+.lesson-picker h2 {
+  margin-bottom: 10px;
+}
+
+.lesson-picker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.lesson-picker-actions .btn {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Micrófono */
+.mic-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mic-state {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e9ecef;
+  color: var(--color-text-muted);
+}
+
+.mic-state-on {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.mic-state-starting {
+  background: var(--color-info-bg);
+  color: #1864ab;
+}
+
+.mic-state-error {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.mic-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.mic-note {
+  margin: 0;
+  flex: 1;
+  min-width: 220px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.mic-readings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px;
+  background: #f8f9fa;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.mic-reading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mic-reading-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.mic-reading-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.mic-cents {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.mic-cents-off {
+  color: var(--color-warning);
+}
+
+.mic-meter {
+  display: block;
+  width: 100%;
+  height: 12px;
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mic-meter-fill {
+  display: block;
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 999px;
+}
+
+.mic-tuning-warning {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-warning);
 }
 
 /* Modo demostración */

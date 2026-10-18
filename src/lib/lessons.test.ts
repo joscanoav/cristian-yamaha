@@ -3,7 +3,9 @@ import {
   createLessonState,
   FIRST_LESSON,
   lessonProgress,
+  LESSONS,
   noteReleased,
+  ODE_TO_JOY_LESSON,
   processDetectedNote,
   resetLesson,
 } from './lessons'
@@ -126,5 +128,49 @@ describe('resetLesson y lessonProgress', () => {
     let state = createLessonState(FIRST_LESSON)
     state = processDetectedNote(state, 60).state
     expect(lessonProgress(state)).toBeCloseTo(0.2, 9)
+  })
+})
+
+describe('lección 2: Himno de la Alegría', () => {
+  it('consta de 15 notas usando solo Do4–Sol4 (MIDI 60–67)', () => {
+    expect(ODE_TO_JOY_LESSON.notes).toHaveLength(15)
+    for (const note of ODE_TO_JOY_LESSON.notes) {
+      expect(note.midi).toBeGreaterThanOrEqual(60)
+      expect(note.midi).toBeLessThanOrEqual(67)
+    }
+  })
+
+  it('contiene la frase principal esperada (Mi Mi Fa Sol, Sol Fa Mi Re, Do Do Re Mi, Mi Re Re)', () => {
+    expect(ODE_TO_JOY_LESSON.notes.map((n) => n.midi)).toEqual([
+      64, 64, 65, 67, 67, 65, 64, 62, 60, 60, 62, 64, 64, 62, 62,
+    ])
+  })
+
+  it('se completa al recorrer toda la frase con liberaciones intermedias', () => {
+    let state = createLessonState(ODE_TO_JOY_LESSON)
+    const midis = ODE_TO_JOY_LESSON.notes.map((n) => n.midi)
+    for (const midi of midis.slice(0, -1)) {
+      state = processDetectedNote(state, midi).state
+      state = noteReleased(state)
+    }
+    const last = processDetectedNote(state, midis[midis.length - 1])
+    expect(last.feedback.type).toBe('completed')
+    expect(last.state.status).toBe('completed')
+    expect(last.state.correctCount).toBe(15)
+  })
+
+  it('una nota sostenida de la frase no avanza dos veces', () => {
+    let state = createLessonState(ODE_TO_JOY_LESSON)
+    state = processDetectedNote(state, 64).state // primera Mi4
+    const sustained = processDetectedNote(state, 64) // Mi4 sostenida
+    expect(sustained.feedback.type).toBe('ignored-sustained')
+    expect(sustained.state.correctCount).toBe(1)
+  })
+})
+
+describe('listado de lecciones', () => {
+  it('incluye la lección 1 y la 2', () => {
+    expect(LESSONS.map((l) => l.id)).toEqual(['leccion-1', 'leccion-2'])
+    expect(LESSONS).toHaveLength(2)
   })
 })

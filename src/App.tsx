@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { MicrophonePanel } from './components/MicrophonePanel'
 import { PianoKeyboard } from './components/PianoKeyboard'
 import { Staff } from './components/Staff'
 import { playNote } from './lib/audio'
 import {
   createLessonState,
-  FIRST_LESSON,
+  LESSONS,
   lessonProgress,
   noteReleased,
   processDetectedNote,
   resetLesson,
+  type Lesson,
   type LessonFeedback,
   type LessonState,
 } from './lib/lessons'
+import type { NoteEvent } from './lib/pitchEvents'
 
 type Message = {
   kind: 'success' | 'error' | 'info' | 'complete'
@@ -50,7 +53,7 @@ function messageForFeedback(
 
 function App() {
   const [lessonState, setLessonState] = useState<LessonState>(() =>
-    createLessonState(FIRST_LESSON),
+    createLessonState(LESSONS[0]),
   )
   const [message, setMessage] = useState<Message | null>({
     kind: 'info',
@@ -123,6 +126,28 @@ function App() {
     playNote(midi, 0.9)
   }, [])
 
+  // Eventos reales del micrófono: el ataque alimenta la lección y la
+  // liberación (caída de volumen/silencio) la prepara para la siguiente.
+  const handleMicEvent = useCallback(
+    (event: NoteEvent) => {
+      if (event.type === 'note') {
+        flashDetected(event.midi)
+        applyDetection(event.midi)
+      } else {
+        setLessonState((current) => noteReleased(current))
+      }
+    },
+    [applyDetection, flashDetected],
+  )
+
+  const selectLesson = useCallback((lesson: Lesson) => {
+    setLessonState(createLessonState(lesson))
+    setMessage({
+      kind: 'info',
+      text: `${lesson.title}: toca la primera nota para empezar.`,
+    })
+  }, [])
+
   const completed = lessonState.status === 'completed'
   const progress = lessonProgress(lessonState)
   const progressCount = lessonState.correctCount
@@ -137,13 +162,30 @@ function App() {
             <span className="logo-key logo-key-black" />
           </span>
           <h1>
-            Piano<span className="logo-accent">Lab</span>
+            Cristian <span className="logo-accent">Yamaha</span>
           </h1>
         </div>
         <p className="tagline">Aprende a tocar el piano paso a paso</p>
       </header>
 
       <main className="app-main">
+        <section className="card lesson-picker" aria-labelledby="lessons-title">
+          <h2 id="lessons-title">Elige una lección</h2>
+          <div className="lesson-picker-actions">
+            {LESSONS.map((lesson) => (
+              <button
+                key={lesson.id}
+                type="button"
+                className={`btn ${lesson.id === lessonState.lesson.id ? 'btn-primary' : 'btn-secondary'}`}
+                aria-pressed={lesson.id === lessonState.lesson.id}
+                onClick={() => selectLesson(lesson)}
+              >
+                {lesson.title}
+              </button>
+            ))}
+          </div>
+        </section>
+
         <section className="card lesson-card" aria-labelledby="lesson-title">
           <div className="lesson-header">
             <h2 id="lesson-title">{lessonState.lesson.title}</h2>
@@ -199,6 +241,8 @@ function App() {
           )}
         </section>
 
+        <MicrophonePanel onNoteEvent={handleMicEvent} />
+
         <section className="card demo-card" aria-labelledby="demo-title">
           <div className="demo-header">
             <h2 id="demo-title">
@@ -206,8 +250,8 @@ function App() {
             </h2>
           </div>
           <p className="demo-text">
-            Las notas de abajo se <strong>simulan</strong>; todavía no se detectan con el
-            micrófono. Usa estos botones para probar el flujo de la lección.
+            Las notas de estos botones se <strong>simulan</strong> y no provienen del
+            micrófono. Úsalos para probar el flujo de la lección sin piano real.
           </p>
           <div className="demo-actions">
             <button
@@ -243,7 +287,10 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <p>PianoLab — detección por micrófono disponible en una próxima versión.</p>
+        <p>
+          Cristian Yamaha — el sonido del micrófono se analiza localmente en tu
+          dispositivo y no se envía a ningún servidor.
+        </p>
       </footer>
     </div>
   )

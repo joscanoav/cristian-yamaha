@@ -154,3 +154,22 @@ export const FIRST_LESSON: Lesson = {
     { midi: 67 },
   ],
 }
+
+/**
+ * Lección 2: frase principal del Himno de la Alegría (Beethoven),
+ * transcrita a la tonalidad de Do mayor y usando solo notas de Do4 a Sol4:
+ * Mi Mi Fa Sol | Sol Fa Mi Re | Do Do Re Mi | Mi Re Re.
+ */
+export const ODE_TO_JOY_LESSON: Lesson = {
+  id: 'leccion-2',
+  title: 'Lección 2: Himno de la Alegría',
+  notes: [
+    { midi: 64 }, { midi: 64 }, { midi: 65 }, { midi: 67 },
+    { midi: 67 }, { midi: 65 }, { midi: 64 }, { midi: 62 },
+    { midi: 60 }, { midi: 60 }, { midi: 62 }, { midi: 64 },
+    { midi: 64 }, { midi: 62 }, { midi: 62 },
+  ],
+}
+
+/** Todas las lecciones disponibles. */
+export const LESSONS: Lesson[] = [FIRST_LESSON, ODE_TO_JOY_LESSON]

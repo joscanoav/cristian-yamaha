@@ -100,7 +100,7 @@ export function nearestNoteFromFrequency(frequency: number): NearestNote {
   return { midi, cents }
 }
 
-/** Indica si una desviación en cents está dentro de la tolerancia (±50 cents por defecto, es decir medio semitono). */
-export function isWithinTolerance(cents: number, toleranceCents = 50): boolean {
+/** Indica si una desviación en cents está dentro de la tolerancia (±30 cents por defecto). */
+export function isWithinTolerance(cents: number, toleranceCents = 30): boolean {
   return Math.abs(cents) <= toleranceCents
 }

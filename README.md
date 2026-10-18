@@ -1,4 +1,4 @@
-# PianoLab
+# Cristian Yamaha
 
 Aplicación web para aprender a tocar el piano con un Yamaha P-145BT de 88 teclas.
 

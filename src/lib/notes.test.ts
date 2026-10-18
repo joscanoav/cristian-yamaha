@@ -106,12 +106,12 @@ describe('nearestNoteFromFrequency', () => {
 })
 
 describe('isWithinTolerance', () => {
-  it('acepta desviaciones dentro del rango por defecto (±50 cents)', () => {
+  it('acepta desviaciones dentro del rango por defecto (±30 cents)', () => {
     expect(isWithinTolerance(0)).toBe(true)
-    expect(isWithinTolerance(30)).toBe(true)
-    expect(isWithinTolerance(-49)).toBe(true)
-    expect(isWithinTolerance(51)).toBe(false)
-    expect(isWithinTolerance(-50.1)).toBe(false)
+    expect(isWithinTolerance(25)).toBe(true)
+    expect(isWithinTolerance(-30)).toBe(true)
+    expect(isWithinTolerance(31)).toBe(false)
+    expect(isWithinTolerance(-30.1)).toBe(false)
   })
 
   it('respeta una tolerancia personalizada', () => {
